@@ -5,8 +5,8 @@ video captioning about environment information by using R2plus1D and S2VT
 
 environment
 
-python <= 3.6
-tensorflow 1.14  
+python <= 3.6  
+tensorflow 1.14
 
 ```
 $ conda create -n tf114 python=3.6
