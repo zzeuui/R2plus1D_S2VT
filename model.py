@@ -42,6 +42,7 @@ class Video_Caption_Generator():
             self.embed_word_b = tf.Variable(tf.zeros([n_words]), name='embed_word_b')
 
     def build_model(self):
+        print("")
         video = tf.placeholder(tf.float32, [self.batch_size, self.n_video_lstm_step, self.dim_image])
         video_mask = tf.placeholder(tf.float32, [self.batch_size, self.n_video_lstm_step])
 
