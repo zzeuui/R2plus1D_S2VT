@@ -47,13 +47,15 @@ class COCOScorer(object):
                     self.setEval(sc, m)
                     self.setImgToEvalImgs(scs, IDs, m)
                     print("%s: %0.3f" % (m, sc))
+                    
             else:
                 self.setEval(score, method)
                 self.setImgToEvalImgs(scores, IDs, method)
-                print("%s: %0.3f" % (method, score))
+                # print("%s: %0.3f" % (method, score))
 
         for metric, score in self.eval.items():
-            print('%s: %.3f' % (metric, score))
+            # print('%s: %.3f' % (metric, score))
+            print("metric and score >>", metric, score)
         return self.eval
 
     def setEval(self, score, method):

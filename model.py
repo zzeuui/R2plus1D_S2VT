@@ -12,11 +12,12 @@ import cv2
 #from keras.preprocessing import sequence
 import pdb
 import math
+import struct
 
 from utils.score import COCOScorer
 
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-
+script_dir = os.path.dirname(__file__)
 class Video_Caption_Generator():
     def __init__(self, dim_image, n_words, dim_hidden, batch_size, n_lstm_step, n_video_lstm_step, n_caption_lstm_step, bias_init_vector=None):
         self.dim_image = dim_image
@@ -154,10 +155,10 @@ class Video_Caption_Generator():
 
 
 #### global parameters
-video_path = './data/youtube_videos'
-video_feat_path = './features/r2plus1d_34_476'
-video_data_path = './data/msvd/video_corpus_476.csv'
-model_path = './checkpoints/r_plus_476'
+video_path = os.path.join(script_dir, 'data/youtube_videos')
+video_feat_path = os.path.join(script_dir, 'data/features/r2plus1d_34_476')
+video_data_path = os.path.join(script_dir, 'data/msvd/video_corpus_476.csv')
+model_path = os.path.join(script_dir, 'data/checkpoints/r_plus_476')
 
 #true 1, false 0
 load_model = 0
@@ -168,13 +169,13 @@ print('video_feat_path: ', model_path)
 video_feat_path_num = video_feat_path.split('/')
 video_feat_path_num = len(video_feat_path_num)
 
-try:
-    if not(os.path.isdir(model_path)):
-        os.makedirs(os.path.join(model_path))
-except OSError as e:
-    if e.errno != e.errno.EEXIST:
-        print("failed to create model save edirectory")
-        raise
+# try:
+#     if not(os.path.isdir(model_path)):
+#         os.makedirs(os.path.join(model_path))
+# except OSError as e:
+#     if e.errno != e.errno.EEXIST:
+#         print("failed to create model save edirectory")
+#         raise
 
 
 #### train parameters
@@ -207,12 +208,12 @@ def get_video_data(video_data_path, video_feat_path, train_ratio=0.9):
     train_vids = []
     test_vids =[]
 
-    train_file_list = os.listdir('./features/train')
-    test_file_list = os.listdir('./features/test')
+    train_file_list = os.listdir(os.path.join(script_dir,'data/features/train'))
+    test_file_list = os.listdir(os.path.join(script_dir,'data/features/test'))
     for i in train_file_list:
-        train_vids.append('./features/r2plus1d_34_476/'+i)
+        train_vids.append('./data/features/r2plus1d_34_476/'+i)
     for i in test_file_list:
-        test_vids.append('./features/r2plus1d_34_476/'+i)
+        test_vids.append('./data/features/r2plus1d_34_476/'+i)
     #train_vids = unique_filenames[:train_len]
     #test_vids = unique_filenames[train_len:]
 
@@ -265,7 +266,7 @@ def train():
     train_data, test_data = get_video_data(video_data_path, video_feat_path, 0.9)
     test_videos = test_data['video_path'].unique()
     train_captions = train_data['Description'].values
-
+    loss_val = 0
     captions_list = list(train_captions)
     captions = np.array(captions_list, dtype=np.object)
 
@@ -281,9 +282,9 @@ def train():
     wordtoix, ixtoword, bias_init_vector = preProBuildWordVocab(captions, word_count_threshold=0)
 
 
-    np.save('./data/wordtoix', wordtoix)
-    np.save('./data/ixtoword', ixtoword)
-    np.save('./data/bias_init_vector', bias_init_vector)
+    np.save(os.path.join(script_dir,'data/wordtoix'), wordtoix)
+    np.save(os.path.join(script_dir,'data/ixtoword'), ixtoword)
+    np.save(os.path.join(script_dir,'data/bias_init_vector'), bias_init_vector)
 
     ixtoword = pd.Series(ixtoword)
 
@@ -469,12 +470,15 @@ def train():
             bleu4 = math.ceil(bleu4 * 10000) / 100
 
             meteor = score['METEOR']
+            meteor = int.from_bytes(meteor, byteorder='big')
             meteor = math.ceil(meteor * 10000) / 100
 
             rouge_l = score['ROUGE_L']
+            rouge_l = int.from_bytes(rouge_l, byteorder='big')
             rouge_l = math.ceil(rouge_l * 10000) / 100
 
             cider = score['CIDEr']
+            cider = int.from_bytes(cider, byteorder='big')
             cider = math.ceil(cider * 10000) / 100
 
             print("Epoch ", epoch, "is done. Saving the model in ", model_path)
