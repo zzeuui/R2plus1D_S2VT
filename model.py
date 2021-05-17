@@ -17,7 +17,7 @@ import struct
 from utils.score import COCOScorer
 
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-script_dir = os.path.dirname(__file__)
+script_dir = os.path.dirname(os.path.abspath(__file__))
 class Video_Caption_Generator():
     def __init__(self, dim_image, n_words, dim_hidden, batch_size, n_lstm_step, n_video_lstm_step, n_caption_lstm_step, bias_init_vector=None):
         self.dim_image = dim_image
@@ -164,7 +164,7 @@ model_path = os.path.join(script_dir, 'data/checkpoints/r_plus_476')
 load_model = 0
 
 print('video_feat_path: ', video_feat_path)
-print('video_feat_path: ', model_path)
+print('model_path: ', model_path)
 
 video_feat_path_num = video_feat_path.split('/')
 video_feat_path_num = len(video_feat_path_num)
@@ -211,9 +211,9 @@ def get_video_data(video_data_path, video_feat_path, train_ratio=0.9):
     train_file_list = os.listdir(os.path.join(script_dir,'data/features/train'))
     test_file_list = os.listdir(os.path.join(script_dir,'data/features/test'))
     for i in train_file_list:
-        train_vids.append('./data/features/r2plus1d_34_476/'+i)
+        train_vids.append(os.path.join(script_dir,'data/features/r2plus1d_34_476/'+i))
     for i in test_file_list:
-        test_vids.append('./data/features/r2plus1d_34_476/'+i)
+        test_vids.append(os.path.join(script_dir,'data/features/r2plus1d_34_476/'+i))
     #train_vids = unique_filenames[:train_len]
     #test_vids = unique_filenames[train_len:]
 
@@ -396,7 +396,7 @@ def train():
 
         print('loss:', loss_val, 'Elapsed time:', str((time.time()-start_time)))
 
-        if 0 == n_epochs%10:
+        if 0 == epoch%10:
             gts = {}
             ref = {}
             IDs = []
