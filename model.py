@@ -4,6 +4,8 @@ import tensorflow as tf
 import pandas as pd
 import numpy as np
 import os
+
+from tensorflow._api.v1 import summary
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 import matplotlib.pyplot as plt
 import sys
@@ -173,6 +175,9 @@ video_feat_path_num = len(video_feat_path_num)
 current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 train_log_dir = 'logs/gradient_tape/' + current_time + '/train'
 test_log_dir = 'logs/gradient_tape/' + current_time + '/test'
+
+print("Log dit >", train_log_dir)
+
 train_summary_writer = tf.summary.FileWriter(train_log_dir)
 test_summary_writer = tf.summary.FileWriter(test_log_dir)
 
@@ -400,7 +405,6 @@ def train():
                             })
 
                 print('learning batch:', start/batch_size, '/', len(current_train_data)/batch_size, '\r', end='')
-
         print('loss:', loss_val, 'Elapsed time:', str((time.time()-start_time)))
 
         if 0 == epoch%10:
@@ -488,7 +492,16 @@ def train():
             cider = int.from_bytes(cider, byteorder='big')
             cider = math.ceil(cider * 10000) / 100
 
-            tf.summary.scalar('meteor', meteor)
+            bleu1Scalar = tf.summary.scalar('bleu1Scalar', meteor)
+            bleu2Scalar = tf.summary.scalar('bleu2Scalar', meteor)
+            bleu3Scalar = tf.summary.scalar('bleu3Scalar', meteor)
+
+            merged = tf.summary.merge_all()
+
+            summary, _ = sess.run([merged, tf.convert_to_tensor(loss_val, dtype=tf.float32)])
+            train_summary_writer.add_summary(summary, 0)
+            train_summary_writer.close()
+
             print("Epoch ", epoch, "is done. Saving the model in ", model_path)
             saver.save(sess, os.path.join(model_path,'loss_' + str(loss_val) +
                                           '_B1_' + str(bleu1) + '_B2_' + str(bleu2) + '_B3_' + str(bleu3) + '_B4_' + str(bleu4)
