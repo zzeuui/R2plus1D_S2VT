@@ -13,7 +13,7 @@ import cv2
 import pdb
 import math
 import struct
-
+import datetime
 from utils.score import COCOScorer
 
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
@@ -168,6 +168,12 @@ print('video_feat_path: ', model_path)
 
 video_feat_path_num = video_feat_path.split('/')
 video_feat_path_num = len(video_feat_path_num)
+
+current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+train_log_dir = 'logs/gradient_tape/' + current_time + '/train'
+test_log_dir = 'logs/gradient_tape/' + current_time + '/test'
+train_summary_writer = tf.summary.FileWriter(train_log_dir)
+test_summary_writer = tf.summary.FileWriter(test_log_dir)
 
 # try:
 #     if not(os.path.isdir(model_path)):
@@ -481,6 +487,7 @@ def train():
             cider = int.from_bytes(cider, byteorder='big')
             cider = math.ceil(cider * 10000) / 100
 
+            tf.summary.scalar('meteor', meteor)
             print("Epoch ", epoch, "is done. Saving the model in ", model_path)
             saver.save(sess, os.path.join(model_path,'loss_' + str(loss_val) +
                                           '_B1_' + str(bleu1) + '_B2_' + str(bleu2) + '_B3_' + str(bleu3) + '_B4_' + str(bleu4)
