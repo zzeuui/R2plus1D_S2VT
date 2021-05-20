@@ -1,2 +1,5 @@
-model_checkpoint_path: "/Users/sandi/Desktop/FirstSemSEOULTech/HCIRLab/repo/R2plus1D_S2VT/data/checkpoints/r_plus_476/loss_11.109614_B1_41.86_B2_26.44_B3_0.01_B4_0.01M_4.197108137642501e+44_R_1.1135735345034747e+21_C_1.2717810662928865e+21-10"
-all_model_checkpoint_paths: "/Users/sandi/Desktop/FirstSemSEOULTech/HCIRLab/repo/R2plus1D_S2VT/data/checkpoints/r_plus_476/loss_11.109614_B1_41.86_B2_26.44_B3_0.01_B4_0.01M_4.197108137642501e+44_R_1.1135735345034747e+21_C_1.2717810662928865e+21-10"
+model_checkpoint_path: "/Users/sandi/Desktop/FirstSemSEOULTech/HCIRLab/repo/R2plus1D_S2VT/data/checkpoints/r_plus_476/loss_0_B1_0.0_B2_0.0_B3_0.0_B4_0.0M_2.8568862873087024e+66_R_6374300.0_C_6374300.0-4"
+all_model_checkpoint_paths: "/Users/sandi/Desktop/FirstSemSEOULTech/HCIRLab/repo/R2plus1D_S2VT/data/checkpoints/r_plus_476/loss_0_B1_0.0_B2_0.0_B3_0.0_B4_0.0M_2.8568862873087024e+66_R_6374300.0_C_6374300.0-1"
+all_model_checkpoint_paths: "/Users/sandi/Desktop/FirstSemSEOULTech/HCIRLab/repo/R2plus1D_S2VT/data/checkpoints/r_plus_476/loss_0_B1_0.0_B2_0.0_B3_0.0_B4_0.0M_2.8568862873087024e+66_R_6374300.0_C_6374300.0-2"
+all_model_checkpoint_paths: "/Users/sandi/Desktop/FirstSemSEOULTech/HCIRLab/repo/R2plus1D_S2VT/data/checkpoints/r_plus_476/loss_0_B1_0.0_B2_0.0_B3_0.0_B4_0.0M_2.8568862873087024e+66_R_6374300.0_C_6374300.0-3"
+all_model_checkpoint_paths: "/Users/sandi/Desktop/FirstSemSEOULTech/HCIRLab/repo/R2plus1D_S2VT/data/checkpoints/r_plus_476/loss_0_B1_0.0_B2_0.0_B3_0.0_B4_0.0M_2.8568862873087024e+66_R_6374300.0_C_6374300.0-4"

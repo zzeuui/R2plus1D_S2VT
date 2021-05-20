@@ -1,7 +1,5 @@
 #-*- coding: utf-8 -*-
 
-import datetime
-from numpy.core.arrayprint import DatetimeFormat
 import tensorflow as tf
 import pandas as pd
 import numpy as np
@@ -15,11 +13,11 @@ import cv2
 import pdb
 import math
 import struct
+
 from utils.score import COCOScorer
 
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 script_dir = os.path.dirname(os.path.abspath(__file__))
-    
 class Video_Caption_Generator():
     def __init__(self, dim_image, n_words, dim_hidden, batch_size, n_lstm_step, n_video_lstm_step, n_caption_lstm_step, bias_init_vector=None):
         self.dim_image = dim_image
@@ -165,14 +163,11 @@ model_path = os.path.join(script_dir, 'data/checkpoints/r_plus_476')
 #true 1, false 0
 load_model = 0
 
+print('video_feat_path: ', video_feat_path)
+print('model_path: ', model_path)
+
 video_feat_path_num = video_feat_path.split('/')
 video_feat_path_num = len(video_feat_path_num)
-
-current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-train_log_dir = 'logs/gradient_tape/' + current_time + '/train'
-test_log_dir = 'logs/gradient_tape/' + current_time + '/test'
-train_summary_writer = tf.summary.FileWriter(train_log_dir)
-test_summary_writer = tf.summary.FileWriter(test_log_dir)
 
 # try:
 #     if not(os.path.isdir(model_path)):
@@ -188,7 +183,7 @@ dim_image = 359
 dim_hidden = 800
 
 n_video_lstm_step = 20
-n_caption_lstm_step = 10
+n_caption_lstm_step = 20
 n_frame_step = 20
 
 n_epochs = 100
@@ -285,6 +280,7 @@ def train():
     captions = list(map(lambda x: x.replace('/', ''), captions))
 
     wordtoix, ixtoword, bias_init_vector = preProBuildWordVocab(captions, word_count_threshold=0)
+
 
     np.save(os.path.join(script_dir,'data/wordtoix'), wordtoix)
     np.save(os.path.join(script_dir,'data/ixtoword'), ixtoword)
@@ -395,11 +391,11 @@ def train():
                         feed_dict={tf_video: current_feats, tf_video_mask: current_video_masks, tf_caption: current_caption_matrix,
                             tf_caption_mask: current_caption_masks
                             })
-                
+
                 print('learning batch:', start/batch_size, '/', len(current_train_data)/batch_size, '\r', end='')
 
         print('loss:', loss_val, 'Elapsed time:', str((time.time()-start_time)))
-        
+
         if 0 == epoch%10:
             gts = {}
             ref = {}
@@ -486,21 +482,9 @@ def train():
             cider = math.ceil(cider * 10000) / 100
 
             print("Epoch ", epoch, "is done. Saving the model in ", model_path)
-            
-            tf.summary.scalar('bleu', bleu4)
-            # tf.summary.scalar('meteor', meteor, step=epoch)
-            # tf.summary.scalar('rouge_l', rouge_l, step=epoch)
             saver.save(sess, os.path.join(model_path,'loss_' + str(loss_val) +
                                           '_B1_' + str(bleu1) + '_B2_' + str(bleu2) + '_B3_' + str(bleu3) + '_B4_' + str(bleu4)
                                           + 'M_' + str(meteor) + '_R_' + str(rouge_l) + '_C_' + str(cider)), global_step=epoch)
 
-
-
 if __name__ == '__main__':
     train()
-    # logdir = "logs/scalars/" + DatetimeFormat.now().strftime("%Y%m%d-%H%M%S")
-    # tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir = 'logs', histogram_freq = 1, write_graph=True,
-    # write_images=False, write_steps_per_second=False, update_freq='epoch',
-    # profile_batch=2, embeddings_freq=0, embeddings_metadata=None)
-    
-
