@@ -197,7 +197,7 @@ dim_hidden = 800
 n_video_lstm_step = 20
 n_caption_lstm_step = 20
 n_frame_step = 20
-
+ 
 n_epochs = 100
 batch_size = 32
 learning_rate = 0.00001
@@ -492,20 +492,20 @@ def train():
             cider = int.from_bytes(cider, byteorder='big')
             cider = math.ceil(cider * 10000) / 100
 
-            bleu1Scalar = tf.summary.scalar('bleu1Scalar', meteor)
-            bleu2Scalar = tf.summary.scalar('bleu2Scalar', meteor)
-            bleu3Scalar = tf.summary.scalar('bleu3Scalar', meteor)
+            ciderScalar = tf.summary.scalar('ciderScalar', cider)
 
             merged = tf.summary.merge_all()
 
-            summary, _ = sess.run([merged, tf.convert_to_tensor(loss_val, dtype=tf.float32)])
+            summary, _ = sess.run([merged, tf.convert_to_tensor(cider, dtype=tf.float32)])
             train_summary_writer.add_summary(summary, 0)
-            train_summary_writer.close()
 
             print("Epoch ", epoch, "is done. Saving the model in ", model_path)
             saver.save(sess, os.path.join(model_path,'loss_' + str(loss_val) +
                                           '_B1_' + str(bleu1) + '_B2_' + str(bleu2) + '_B3_' + str(bleu3) + '_B4_' + str(bleu4)
                                           + 'M_' + str(meteor) + '_R_' + str(rouge_l) + '_C_' + str(cider)), global_step=epoch)
+
+
+    train_summary_writer.close()
 
 if __name__ == '__main__':
     train()
