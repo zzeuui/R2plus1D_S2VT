@@ -39,13 +39,11 @@ video_feat_path_num = video_feat_path.split('/')
 video_feat_path_num = len(video_feat_path_num)
 
 current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-train_log_dir = 'logs/gradient_tape/' + current_time + '/train'
-test_log_dir = 'logs/gradient_tape/' + current_time + '/test'
+#train_log_dir = 'logs/gradient_tape/' + current_time + '/train'
+#test_log_dir = 'logs/gradient_tape/' + current_time + '/test'
 
-print("Log dit >", train_log_dir)
+#print("Log dit >", train_log_dir)
 
-train_summary_writer = tf.summary.FileWriter(train_log_dir)
-test_summary_writer = tf.summary.FileWriter(test_log_dir)
 
 # try:
 #     if not(os.path.isdir(model_path)):
