@@ -1,2 +1,2 @@
-model_checkpoint_path: "/Users/sandi/Desktop/FirstSemSEOULTech/HCIRLab/repo/R2plus1D_S2VT/data/checkpoints/r_plus_476/loss_11.470732_B1_43.6_B2_31.2_B3_16.01_B4_0.01M_1.0744600128902562e+47_R_1.1475336799994699e+21_C_1.7043288657710998e+21-10"
-all_model_checkpoint_paths: "/Users/sandi/Desktop/FirstSemSEOULTech/HCIRLab/repo/R2plus1D_S2VT/data/checkpoints/r_plus_476/loss_11.470732_B1_43.6_B2_31.2_B3_16.01_B4_0.01M_1.0744600128902562e+47_R_1.1475336799994699e+21_C_1.7043288657710998e+21-10"
+model_checkpoint_path: "/home/hcir-server1/yjjung/R2plus1D_S2VT/data/checkpoints/r_plus_476/loss_11.335928_B1_42.79_B2_34.26_B3_0.01_B4_0.01M_4.1971094252307896e+44_R_1.0566874423927758e+21_C_1.0099899281937063e+21-10"
+all_model_checkpoint_paths: "/home/hcir-server1/yjjung/R2plus1D_S2VT/data/checkpoints/r_plus_476/loss_11.335928_B1_42.79_B2_34.26_B3_0.01_B4_0.01M_4.1971094252307896e+44_R_1.0566874423927758e+21_C_1.0099899281937063e+21-10"

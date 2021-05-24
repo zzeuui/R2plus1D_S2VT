@@ -18,144 +18,10 @@ import struct
 import datetime
 
 from utils.score import COCOScorer
+from utils.generator import Video_Caption_Generator
 
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 script_dir = os.path.dirname(os.path.abspath(__file__))
-class Video_Caption_Generator():
-    def __init__(self, dim_image, n_words, dim_hidden, batch_size, n_lstm_step, n_video_lstm_step, n_caption_lstm_step, bias_init_vector=None):
-        self.dim_image = dim_image
-        self.n_words = n_words
-        self.dim_hidden = dim_hidden
-        self.batch_size = batch_size
-        self.n_lstm_step = n_lstm_step
-        self.n_video_lstm_step = n_video_lstm_step
-        self.n_caption_lstm_step = n_caption_lstm_step
-
-        self.Wemb = tf.Variable(tf.random_uniform([n_words, dim_hidden], -0.1, 0.1), name='Wemb')
-
-        self.lstm1 = tf.contrib.rnn.BasicLSTMCell(dim_hidden)
-        self.lstm2 = tf.contrib.rnn.BasicLSTMCell(dim_hidden)
-
-        self.encode_image_W = tf.Variable(tf.random_uniform([dim_image, dim_hidden], -0.1,0.1), name='encode_image_W')
-        self.encode_image_b = tf.Variable(tf.zeros([dim_hidden]), name='encode_image_b')
-
-        self.embed_word_W = tf.Variable(tf.random_uniform([dim_hidden, n_words], -0.1,0.1), name='embed_word_W')
-        if bias_init_vector is not None:
-            self.embed_word_b = tf.Variable(bias_init_vector.astype(np.float32), name='embed_word_b')
-        else:
-            self.embed_word_b = tf.Variable(tf.zeros([n_words]), name='embed_word_b')
-
-    def build_model(self):
-        print("")
-        video = tf.placeholder(tf.float32, [self.batch_size, self.n_video_lstm_step, self.dim_image])
-        video_mask = tf.placeholder(tf.float32, [self.batch_size, self.n_video_lstm_step])
-
-        caption = tf.placeholder(tf.int32, [self.batch_size, self.n_caption_lstm_step+1])
-        caption_mask = tf.placeholder(tf.float32, [self.batch_size, self.n_caption_lstm_step+1])
-
-        video_flat = tf.reshape(video, [-1, self.dim_image])
-        image_emb = tf.nn.xw_plus_b(video_flat, self.encode_image_W, self.encode_image_b)
-        image_emb = tf.reshape(image_emb, [self.batch_size, self.n_lstm_step, self.dim_hidden])
-
-        state1 = self.lstm1.zero_state(self.batch_size, dtype=tf.float32)
-        state2 = self.lstm2.zero_state(self.batch_size, dtype=tf.float32)
-        padding = tf.zeros([self.batch_size, self.dim_hidden])
-
-        probs = []
-        loss = 0.0
-
-        ###### encoding
-        with tf.variable_scope("encoding") as scope:
-            for i in range(0, self.n_video_lstm_step): ### Phase 1: only read frames
-                if i > 0:
-                    tf.get_variable_scope().reuse_variables()
-
-                with tf.variable_scope("LSTM1") as scope:
-                    (output1, state1) = self.lstm1(image_emb[:,i,:], state1)
-
-                with tf.variable_scope("LSTM2") as scope:
-                    (output2, state2) = self.lstm2(tf.concat([padding, output1], 1), state2)
-
-        ##### decoding
-        with tf.variable_scope("encoding") as scope:
-            for i in range(0, self.n_caption_lstm_step): ### Phase 2: only generate captions
-                current_embed = tf.nn.embedding_lookup(self.Wemb, caption[:,i])
-
-                tf.get_variable_scope().reuse_variables()
-
-                with tf.variable_scope("LSTM1") as scope:
-                    (output1, state1) = self.lstm1(padding, state1)
-
-                with tf.variable_scope("LSTM2") as scope:
-                    (output2, state2) = self.lstm2(tf.concat([current_embed, output1], 1), state2)
-
-                labels = tf.expand_dims(caption[:, i+1], 1)
-                indices = tf.expand_dims(tf.range(0, self.batch_size, 1), 1)
-                concated = tf.concat([indices, labels], 1)
-                onehot_labels = tf.sparse_to_dense(concated, tf.stack([self.batch_size, self.n_words]), 1.0, 0.0)
-
-                logit_words = tf.nn.xw_plus_b(output2, self.embed_word_W, self.embed_word_b)
-                cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=onehot_labels, logits=logit_words)
-                cross_entropy = cross_entropy * caption_mask[:,i]
-                probs.append(logit_words)
-
-                current_loss = tf.reduce_sum(cross_entropy)/self.batch_size
-                loss = loss + current_loss
-
-        return loss, video, video_mask, caption, caption_mask, probs
-
-
-    def build_generator(self):
-        video = tf.placeholder(tf.float32, [1,self.n_video_lstm_step, self.dim_image])
-        video_mask = tf.placeholder(tf.float32, [1, self.n_video_lstm_step])
-
-        video_flat = tf.reshape(video, [-1, self.dim_image])
-        image_emb = tf.nn.xw_plus_b(video_flat, self.encode_image_W, self.encode_image_b)
-        image_emb = tf.reshape(image_emb, [1, self.n_video_lstm_step, self.dim_hidden])
-
-        state1 = self.lstm1.zero_state(1, dtype=tf.float32)
-        state2 = self.lstm2.zero_state(1, dtype=tf.float32)
-        padding = tf.zeros([1, self.dim_hidden])
-
-        generated_words = []
-        probs = []
-        embeds = []
-
-        with tf.variable_scope("encoding") as scope:
-            for i in range(0, self.n_video_lstm_step):
-                if i > 0:
-                    tf.get_variable_scope().reuse_variables()
-
-                with tf.variable_scope("LSTM1"):
-                    (output1, state1) = self.lstm1(image_emb[:, i, :], state1)
-
-                with tf.variable_scope("LSTM2"):
-                    (output2, state2) = self.lstm2(tf.concat([padding, output1], 1), state2)
-
-        with tf.variable_scope("encoding") as scope:
-            for i in range(0, self.n_caption_lstm_step):
-                tf.get_variable_scope().reuse_variables()
-                if i == 0:
-                    current_embed = tf.nn.embedding_lookup(self.Wemb, tf.ones([1], dtype=tf.int64))
-
-                with tf.variable_scope("LSTM1"):
-                    (output1, state1) = self.lstm1(padding, state1)
-
-                with tf.variable_scope("LSTM2"):
-                    (output2, state2) = self.lstm2(tf.concat([current_embed, output1], 1), state2)
-
-                logit_words = tf.nn.xw_plus_b(output2, self.embed_word_W, self.embed_word_b)
-                max_prob_index = tf.argmax(logit_words, 1)[0]
-                generated_words.append(max_prob_index)
-                probs.append(logit_words)
-
-                current_embed = tf.nn.embedding_lookup(self.Wemb, max_prob_index)
-                current_embed = tf.expand_dims(current_embed, 0)
-
-                embeds.append(current_embed)
-
-        return video, video_mask, generated_words, probs, embeds
-
 
 #### global parameters
 video_path = os.path.join(script_dir, 'data/youtube_videos')
@@ -311,6 +177,9 @@ def train():
             bias_init_vector=bias_init_vector)
 
     tf_loss, tf_video, tf_video_mask, tf_caption, tf_caption_mask, tf_probs = model.build_model()
+
+    tf.summary.scalar('train_loss', tf_loss)
+
     video_tf, video_mask_tf, caption_tf, probs_tf, last_embed_tf = model.build_generator()
 
     config = tf.ConfigProto()
@@ -324,6 +193,8 @@ def train():
 
     tf.global_variables_initializer().run()
 
+    merged = tf.summary.merge_all()
+
     #load model
     if load_model == 1:
         ckpt = tf.train.get_checkpoint_state(model_path)
@@ -332,6 +203,8 @@ def train():
             print('model load from ...', model_path)
 
     start_time = time.time()
+    writer = tf.summary.FileWriter('./logs')
+
     for epoch in range(1, n_epochs+1):
         index = list(train_data.index)
         np.random.shuffle(index)
@@ -399,10 +272,11 @@ def train():
             if load_model == 0:
                 probs_val = sess.run(tf_probs, feed_dict={tf_video:current_feats, tf_caption:current_caption_matrix})
 
-                _, loss_val = sess.run([train_op, tf_loss],
+                _, loss_val, summary = sess.run([train_op, tf_loss, merged],
                         feed_dict={tf_video: current_feats, tf_video_mask: current_video_masks, tf_caption: current_caption_matrix,
                             tf_caption_mask: current_caption_masks
                             })
+                writer.add_summary(summary, epoch*int(len(current_train_data)/batch_size)+int(start/batch_size))
 
                 print('learning batch:', start/batch_size, '/', len(current_train_data)/batch_size, '\r', end='')
         print('loss:', loss_val, 'Elapsed time:', str((time.time()-start_time)))
@@ -492,20 +366,12 @@ def train():
             cider = int.from_bytes(cider, byteorder='big')
             cider = math.ceil(cider * 10000) / 100
 
-            ciderScalar = tf.summary.scalar('ciderScalar', cider)
-
-            merged = tf.summary.merge_all()
-
-            summary, _ = sess.run([merged, tf.convert_to_tensor(cider, dtype=tf.float32)])
-            train_summary_writer.add_summary(summary, 0)
+            #ciderScalar = tf.summary.scalar('ciderScalar', cider)
 
             print("Epoch ", epoch, "is done. Saving the model in ", model_path)
             saver.save(sess, os.path.join(model_path,'loss_' + str(loss_val) +
                                           '_B1_' + str(bleu1) + '_B2_' + str(bleu2) + '_B3_' + str(bleu3) + '_B4_' + str(bleu4)
                                           + 'M_' + str(meteor) + '_R_' + str(rouge_l) + '_C_' + str(cider)), global_step=epoch)
-
-
-    train_summary_writer.close()
 
 if __name__ == '__main__':
     train()
